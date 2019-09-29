@@ -5,12 +5,13 @@
 #include <stdbool.h>
 #include "dictionary.h"
 
-int main() 
+int main(int argc, char** argv) 
 {
     hashmap_t map[HASH_SIZE];
-    load_dictionary("wordlist.txt", map);
+    char* wordlist = argv[1];
+    load_dictionary(wordlist, map);
     char* misspelled[MAX_MISSPELLED];
-    char text[] = "test1.txt";
+    char* text = argv[2];
     FILE* fp = fopen(text, "r");
     check_words(fp, map, misspelled);
 

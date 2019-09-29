@@ -9,13 +9,13 @@
 int check_words(FILE* fp, hashmap_t hashtable[], char * misspelled[]) 
 {
     int misscount = 0;
-    char punctuations[] = " ,.!?/\n\r\t";
+    char punctuations[] = " ,.!?:;/\n\r\t";
     char buffer;
     char wordbuffer[LENGTH + 1];
     int wp = 0;
     while ((buffer = fgetc(fp)) >= 0) 
     {
-        if (buffer < 'a' && buffer >= 'A') 
+        if (buffer < 'Z' && buffer >= 'A') 
         {
             buffer += 'a' - 'A';
         }
@@ -43,8 +43,26 @@ int check_words(FILE* fp, hashmap_t hashtable[], char * misspelled[])
         }
         else 
         {
+            if (wp == 45) 
+            {
+                continue;
+            }
             wordbuffer[wp++] = buffer;
         }
+    }
+    int i = 0;
+    node* n;
+    node* p;
+    for (i = 0; i < HASH_SIZE; i++) 
+    {
+        n = hashtable[i];
+        
+        while (n != NULL) 
+        {
+            p = n -> next;
+            free(n);
+            n = p;
+        }        
     }
     return misscount;
 }
@@ -75,16 +93,26 @@ bool load_dictionary(const char* dictionary_file, hashmap_t hashtable[])
     char wordbuffer[LENGTH + 1];
     int wp = 0;
     node* n;
+    int i = 0;
+    for (i = 0; i < HASH_SIZE; i++) 
+    {
+        hashtable[i] = NULL;
+    }
     while ((buffer = fgetc(fd)) >= 0) 
     {
         if (buffer != '\n')
-        {
+        {   
+            if (wp == 45) 
+            {
+                continue;
+            }
             wordbuffer[wp++] = buffer;
         }
         else 
         {
             wordbuffer[wp++] = '\0';
             n = malloc(sizeof(node));
+            n -> next = NULL;
             strcpy(n->word, wordbuffer);
             int hashval = hash_function(n->word);
             n->next = hashtable[hashval];
