@@ -13,14 +13,16 @@ int check_words(FILE* fp, hashmap_t hashtable[], char * misspelled[])
     char buffer;
     char wordbuffer[LENGTH + 1];
     int wp = 0;
+    int i = 0;
+    bool capital = true;
     while ((buffer = fgetc(fp)) >= 0) 
     {
-        if (buffer < 'Z' && buffer >= 'A') 
-        {
-            buffer += 'a' - 'A';
-        }
         if (strchr(punctuations, buffer) != NULL) 
         {
+            if (buffer == '.' ||buffer == '?'||buffer == '!') 
+            {
+                capital = true;
+            }
             if (wp == 0) 
             {
                 continue;
@@ -28,14 +30,34 @@ int check_words(FILE* fp, hashmap_t hashtable[], char * misspelled[])
             else 
             {
                 wordbuffer[wp++] = '\0';
+                if (capital) 
+                {
+                    if (wordbuffer[0] >= 'A' &&  wordbuffer[0] <= 'Z')
+                    {
+                        for (i = 1; i< strlen(wordbuffer); i++) 
+                        {
+                            if (wordbuffer[i] >= 'A' &&  wordbuffer[i] <= 'Z') 
+                            {
+                                capital = false;
+                                break;
+                            }
+                        }
+                        if (capital) 
+                        {
+                            wordbuffer[0] += 'a' - 'A';
+                        }
+
+                    }
+                }
                 if (!check_word(wordbuffer, hashtable)) 
                 {   
-                    printf("misspelled: %s\n",wordbuffer);
                     if (misscount < MAX_MISSPELLED) 
                     {
-                        char misspelledword[LENGTH + 1];
-                        strcpy(misspelledword, wordbuffer);
-                        misspelled[misscount++] = misspelledword;
+                        printf("misspell:%s\n", wordbuffer);
+  //                      char misspelledword[LENGTH + 1];
+                        misspelled[misscount]=(char *) malloc(wp * sizeof(char));
+                        strcpy(misspelled[misscount++], wordbuffer);
+//                        misspelled[misscount++] = misspelledword;
                     }
                 }
                 wp = 0;
@@ -50,7 +72,12 @@ int check_words(FILE* fp, hashmap_t hashtable[], char * misspelled[])
             wordbuffer[wp++] = buffer;
         }
     }
-    int i = 0;
+    return misscount;
+}
+
+void free_map(hashmap_t hashtable[]) 
+{
+    int i=0;
     node* n;
     node* p;
     for (i = 0; i < HASH_SIZE; i++) 
@@ -64,14 +91,28 @@ int check_words(FILE* fp, hashmap_t hashtable[], char * misspelled[])
             n = p;
         }        
     }
-    return misscount;
 }
 
 bool check_word(const char* word, hashmap_t hashtable[])
-{
+{   
+    int i = 0;
+    bool flag = true;
+    for (i=0;i<strlen(word);i++) 
+    {
+        if (word[i]<'0' || word[i]>'9') 
+        {
+            flag = false;
+            break;
+        }
+    }
+    if (flag) 
+    {
+        return flag;
+    }
     int hashval = hash_function(word);
     node* n = hashtable[hashval];
     while (n != NULL) 
+    
     {
         if (strcmp(n->word, word) == 0) 
         {
