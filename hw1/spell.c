@@ -15,12 +15,19 @@ int check_words(FILE* fp, hashmap_t hashtable[], char * misspelled[])
     int wp = 0;
     int i = 0;
     bool capital = true;
-    while ((buffer = fgetc(fp)) >= 0) 
+    bool punctuation = false;
+    while ((buffer = fgetc(fp)) != EOF) 
     {
         if (strchr(punctuations, buffer) != NULL) 
-        {
+        {   
+            punctuation = false;
             if (buffer == '.' ||buffer == '?'||buffer == '!') 
             {
+                if (buffer == '.')
+                {
+                    punctuation = true;
+                    continue;
+                }
                 capital = true;
             }
             if (wp == 0) 
@@ -53,7 +60,7 @@ int check_words(FILE* fp, hashmap_t hashtable[], char * misspelled[])
                 {   
                     if (misscount < MAX_MISSPELLED) 
                     {
-                        printf("misspell:%s\n", wordbuffer);
+                       // printf("misspell:%s\n", wordbuffer);
   //                      char misspelledword[LENGTH + 1];
                         misspelled[misscount]=(char *) malloc(wp * sizeof(char));
                         strcpy(misspelled[misscount++], wordbuffer);
@@ -65,6 +72,15 @@ int check_words(FILE* fp, hashmap_t hashtable[], char * misspelled[])
         }
         else 
         {
+            if (wp == 45) 
+            {
+                continue;
+            }
+            if (punctuation) 
+            {
+                wordbuffer[wp++]='.';
+                punctuation = false;
+            }
             if (wp == 45) 
             {
                 continue;
@@ -95,7 +111,15 @@ void free_map(hashmap_t hashtable[])
 
 bool check_word(const char* word, hashmap_t hashtable[])
 {   
+
     int i = 0;
+    for (i = 0; i < strlen(word); i++) 
+    {
+        if (word[i] < 0) 
+        {
+            return false;
+        }
+    }
     bool flag = true;
     for (i=0;i<strlen(word);i++) 
     {
@@ -139,7 +163,7 @@ bool load_dictionary(const char* dictionary_file, hashmap_t hashtable[])
     {
         hashtable[i] = NULL;
     }
-    while ((buffer = fgetc(fd)) >= 0) 
+    while ((buffer = fgetc(fd)) != EOF) 
     {
         if (buffer != '\n')
         {   
